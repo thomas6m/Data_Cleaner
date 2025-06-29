@@ -135,3 +135,18 @@ data-cleaner --input data.xlsx \
 - **Parallel Processing**: Multi-threaded processing for better performance
 - **Caching**: Optional caching for lookup tables
 - **Dry Run**: Preview changes without modifying files
+
+## Scheduled Execution
+
+### Running via Job or Scheduler
+```bash
+data_cleaner/python-env/bin/python data_cleaner/cli.py \
+    --input /data/input.xlsx \
+    --output /data/output.csv \
+    --subset Email \
+    --lookup /data/lookup.csv \
+    --lookup-key Email \
+    --lookup-fields User_Type,Region \
+    --output-format csv \
+    >> /home/user/data_cleaner/data_cleaner.log 2>&1
+```
