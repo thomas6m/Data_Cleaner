@@ -1,5 +1,4 @@
 # data_cleaner/cli.py
-
 import argparse
 import re
 import os
@@ -9,6 +8,7 @@ from data_cleaner.polars_cleaner import remove_duplicates_polars
 from data_cleaner.utils import validate_header_line
 from data_cleaner.logger_setup import setup_logging
 from data_cleaner.perf_utils import log_step
+from data_cleaner.config import DEFAULT_CONVERT_DIR, DEFAULT_NUM_WORKERS, DEFAULT_OUTPUT_FORMAT
 
 logger = setup_logging()
 
@@ -27,13 +27,13 @@ def main():
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--keep", "-k", help="Comma-separated columns to keep")
     group.add_argument("--drop", "-d", help="Comma-separated columns to drop")
-    parser.add_argument("--convert-dir", default="./converted", help="Directory for converted files")
+    parser.add_argument("--convert-dir", default=DEFAULT_CONVERT_DIR, help="Directory for converted files")
     parser.add_argument("--lookup", help="Path to lookup file")
     parser.add_argument("--lookup-key", help="Column to join on")
     parser.add_argument("--lookup-fields", help="Comma-separated fields to join from lookup")
     parser.add_argument("--dry-run", action="store_true", help="Perform a dry run without writing output")
-    parser.add_argument("--output-format", choices=["csv", "parquet"], default="csv")
-    parser.add_argument("--num-workers", type=int, default=4, help="Number of worker threads for parallel processing")
+    parser.add_argument("--output-format", choices=["csv", "parquet"], default=DEFAULT_OUTPUT_FORMAT)
+    parser.add_argument("--num-workers", type=int, default=DEFAULT_NUM_WORKERS, help="Number of worker threads for parallel processing")
     parser.add_argument("--no-cache", action="store_true", help="Disable caching of the lookup table")
 
     args = parser.parse_args()

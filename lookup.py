@@ -1,11 +1,12 @@
 # data_cleaner/lookup.py
-
 import polars as pl
 import os
 import re
 from typing import List, Optional
+
 from data_cleaner.logger_setup import setup_logging
 from data_cleaner.perf_utils import log_step
+from data_cleaner.config import COLUMN_NAME_NORMALIZE_PATTERN, SUPPORTED_LOOKUP_EXTENSIONS
 
 logger = setup_logging()
 
@@ -17,7 +18,7 @@ def normalize_column_name(col: str) -> str:
     """
     Normalize column name by stripping, lowering, and replacing non-word chars with underscores.
     """
-    return re.sub(r'\W+', '_', col.strip().lower())
+    return COLUMN_NAME_NORMALIZE_PATTERN.sub('_', col.strip().lower())
 
 def get_lookup_df(lookup_path: str, use_cache: bool = True) -> pl.DataFrame:
     """
@@ -46,8 +47,11 @@ def get_lookup_df(lookup_path: str, use_cache: bool = True) -> pl.DataFrame:
             logger.error(f"Lookup file not found: {lookup_path}")
             raise FileNotFoundError(f"Lookup file not found: {lookup_path}")
 
+        ext = lookup_path.lower()
+        if not ext.endswith(SUPPORTED_LOOKUP_EXTENSIONS):
+            raise ValueError(f"Unsupported lookup file type: {lookup_path}")
+
         try:
-            ext = lookup_path.lower()
             if ext.endswith(".csv"):
                 df = pl.read_csv(lookup_path)
             elif ext.endswith(".parquet"):
@@ -59,8 +63,6 @@ def get_lookup_df(lookup_path: str, use_cache: bool = True) -> pl.DataFrame:
             elif ext.endswith((".xls", ".xlsx")):
                 import pandas as pd
                 df = pl.from_pandas(pd.read_excel(lookup_path))
-            else:
-                raise ValueError(f"Unsupported lookup file type: {lookup_path}")
         except Exception as e:
             logger.error(f"Failed to load lookup file: {e}")
             raise RuntimeError(f"Failed to load lookup file: {e}")

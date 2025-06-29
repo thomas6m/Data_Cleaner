@@ -4,10 +4,11 @@ import pandas as pd
 import psutil
 from typing import Optional
 from data_cleaner.logger_setup import setup_logging
+from data_cleaner.config import ALLOWED_EXTENSIONS, MAX_MEMORY_GB_DEFAULT
 
 logger = setup_logging()
 
-def check_system_resources(file_path: str, max_memory_gb: float = 8.0):
+def check_system_resources(file_path: str, max_memory_gb: float = MAX_MEMORY_GB_DEFAULT):
     """Check if system has enough resources to process file"""
     if not os.path.exists(file_path):
         return True  # Will be caught by later validation
@@ -34,10 +35,12 @@ def validate_file_path(file_path: str, allowed_extensions: list = None) -> bool:
     if not os.access(file_path, os.R_OK):
         raise PermissionError(f"Cannot read input file: {file_path}")
     
-    if allowed_extensions:
-        ext = os.path.splitext(file_path)[1].lower()
-        if ext not in allowed_extensions:
-            raise ValueError(f"File extension {ext} not in allowed extensions: {allowed_extensions}")
+    if allowed_extensions is None:
+        allowed_extensions = ALLOWED_EXTENSIONS
+    
+    ext = os.path.splitext(file_path)[1].lower()
+    if ext not in allowed_extensions:
+        raise ValueError(f"File extension {ext} not in allowed extensions: {allowed_extensions}")
     
     return True
 
@@ -60,8 +63,7 @@ def convert_to_csv_if_needed(input_path: str, output_dir: str = "./converted", d
         RuntimeError: If conversion fails
     """
     # Validate input file
-    allowed_extensions = ['.csv', '.xlsx', '.xls', '.txt', '.tsv', '.parquet', '.json', '.jsonl']
-    validate_file_path(input_path, allowed_extensions)
+    validate_file_path(input_path)
     
     # Check system resources
     check_system_resources(input_path)
@@ -85,16 +87,13 @@ def convert_to_csv_if_needed(input_path: str, output_dir: str = "./converted", d
         logger.info(f"🔄 Converting {ext} file to CSV: {input_path}")
         
         if ext in [".xls", ".xlsx"]:
-            # Handle Excel files
             df = pd.read_excel(input_path)
             logger.info(f"📊 Loaded Excel file: {df.shape[0]} rows, {df.shape[1]} columns")
             
         elif ext == ".txt":
-            # Handle text files with custom or auto-detected delimiter
             try:
                 df = pd.read_csv(input_path, sep=delimiter or None, engine="python")
             except Exception as e:
-                # Try common delimiters if auto-detection fails
                 for sep in ['\t', ';', '|']:
                     try:
                         df = pd.read_csv(input_path, sep=sep, engine="python")
@@ -106,25 +105,21 @@ def convert_to_csv_if_needed(input_path: str, output_dir: str = "./converted", d
                     raise e
                     
         elif ext == ".tsv":
-            # Handle TSV files
             df = pd.read_csv(input_path, sep="\t")
             
         elif ext in [".json", ".jsonl"]:
-            # Handle JSON files
             if ext == ".json":
                 df = pd.read_json(input_path)
-            else:  # .jsonl
+            else:
                 df = pd.read_json(input_path, lines=True)
             
         else:
-            supported_formats = ", ".join(allowed_extensions)
+            supported_formats = ", ".join(ALLOWED_EXTENSIONS)
             raise ValueError(f"Unsupported file type: {ext}. Supported formats: {supported_formats}")
         
-        # Validate loaded data
         if df.empty:
             raise ValueError(f"File appears to be empty or contains no valid data: {input_path}")
         
-        # Write to CSV
         df.to_csv(output_path, index=False)
         logger.info(f"✅ Successfully converted to CSV: {output_path}")
         logger.info(f"📊 Final output: {df.shape[0]} rows, {df.shape[1]} columns")
@@ -139,7 +134,6 @@ def convert_to_csv_if_needed(input_path: str, output_dir: str = "./converted", d
         error_msg = f"Failed to convert file '{input_path}': {str(e)}"
         logger.error(f"❌ {error_msg}")
         
-        # Provide helpful suggestions based on error type
         if "codec" in str(e).lower() or "encoding" in str(e).lower():
             logger.info("💡 Tip: Try specifying a different encoding (UTF-8, latin-1, etc.)")
         elif "delimiter" in str(e).lower() or "separator" in str(e).lower():
