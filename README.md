@@ -45,7 +45,7 @@ data_cleaner/
 ├── logger_setup.py      # Centralized logger configuration
 ├── lookup.py            # (Optional) Column mappings / dictionary logic
 ├── config.py            # Global constants / configs
-└── tests/               # Test suite
+
 ```
 
 ## 🛠 Installation
@@ -259,9 +259,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🆘 Support
 
-- 📚 [Documentation](https://github.com/your-username/data_cleaner/wiki)
-- 🐛 [Issue Tracker](https://github.com/your-username/data_cleaner/issues)
-- 💬 [Discussions](https://github.com/your-username/data_cleaner/discussions)
+- 📚 [Documentation](https://github.com/thomas6m/data_cleaner/wiki)
+- 🐛 [Issue Tracker](https://github.com/thomas6m/data_cleaner/issues)
+- 💬 [Discussions](https://github.com/thomas6m/data_cleaner/discussions)
 
 ## 🏆 Acknowledgments
 
